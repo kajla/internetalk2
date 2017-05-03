@@ -27,8 +27,13 @@ and open the template in the editor.
             echo ujGomb("kilep", "Kilépés");
             br(2);
             echo szovegMezo("szoveg1", filter_input(INPUT_POST, "szoveg1", FILTER_SANITIZE_STRING));
+            br(3);
             ?>
         </form>
+        <h3>Táblázat</h3>
+        <?php
+        tanuloTabla();
+        ?>
     </body>
 </html>
 <?php
@@ -51,5 +56,39 @@ function szovegMezo(string $nev, $szoveg) {
     }
     $szv = '<input type="text" name="' . $nev . '" value="' . $szoveg . '" />';
     return $szv;
+}
+
+function adatbazisKapcsolat() {
+    $kapcsolat = mysqli_connect('127.0.0.1', 'root', 'alma', 'tanulok', '3306');
+    if (!$kapcsolat) {
+        die('Nem sikerült csatlakozni az adatbázishoz: ' . mysqli_connect_error());
+    }
+    mysqli_query($kapcsolat, 'SET NAMES \'utf8\'');
+    return $kapcsolat;
+}
+
+function adatbazisLezaras($kapcsolat) {
+    mysqli_close($kapcsolat);
+}
+
+function tanuloTabla() {
+    $kapcsolat = adatbazisKapcsolat();
+    echo '<table>';
+    echo '<tr>';
+    echo '<th>tazon</th>';
+    echo '<th>nev</th>';
+    echo '<th>szak</th>';
+    echo '</tr>';
+    $eredmeny = mysqli_query($kapcsolat, 'SELECT tazon, nev, szak FROM tanulo');
+    while (($sor = mysqli_fetch_array($eredmeny, MYSQLI_ASSOC)) != NULL) {
+        echo '<tr>';
+        echo '<td>' . $sor['tazon'] . '</td>';
+        echo '<td>' . $sor['nev'] . '</td>';
+        echo '<td>' . $sor['szak'] . '</td>';
+        echo '</tr>';
+    }
+    mysqli_free_result($eredmeny);
+    echo '</table>';
+    adatbazisLezaras($kapcsolat);
 }
 ?>
