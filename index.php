@@ -4,6 +4,20 @@ To change this license header, choose License Headers in Project Properties.
 To change this template file, choose Tools | Templates
 and open the template in the editor.
 -->
+<?php
+session_start();
+if (!isset($_SESSION['poz'])) {
+    $_SESSION['poz'] = 0;
+    $_SESSION['ssz'] = 2;
+} else {
+    if (isset($_POST['frissites'])) {
+        $_SESSION['ssz'] = $_POST['db'];
+    }
+}
+
+include 'fvk.php';
+?>
+
 <html>
     <head>
         <meta charset="UTF-8">
@@ -14,81 +28,40 @@ and open the template in the editor.
             <?php
             if (filter_input(INPUT_POST, "kilep")) {
                 echo 'Kilépett';
-                exit();
+                session_destroy();
             }
+            br(1);
             echo 'POST: ';
             print_r($_POST);
             br(1);
             echo 'GET: ';
             print_r($_GET);
+            br(1);
+            print_r($_SESSION);
             br(3);
-            echo ujGomb("gomb", "Gomb");
+            echo 'Lapméret: ';
+            echo szovegMezo("db", $_SESSION['ssz']);
             br(2);
+
+            echo ujGomb("ujhozzaad", "Hozzáadás");
+            echo ' ';
+            echo ujGomb("frissites", "Frissítés");
+            echo ' ';
             echo ujGomb("kilep", "Kilépés");
             br(2);
             echo szovegMezo("szoveg1", filter_input(INPUT_POST, "szoveg1", FILTER_SANITIZE_STRING));
             br(3);
+            if (isset($_POST['ujhozzaad'])) {
+                ujSor();
+            }
+            if (isset($_POST['hozzaadas'])) {
+                hozzaad($_POST['ujnev'], $_POST['ujszak']);
+            }
             ?>
         </form>
         <h3>Táblázat</h3>
         <?php
-        tanuloTabla();
+        tanuloTabla($_SESSION['ssz']);
         ?>
     </body>
 </html>
-<?php
-
-function br(int $sor) {
-
-    for ($i = 0; $i < $sor; $i++) {
-        echo '<br />';
-    }
-}
-
-function ujGomb(string $nev, string $ertek) {
-    $gomb = '<input type="SUBMIT" name="' . $nev . '" value="' . $ertek . '" />';
-    return $gomb;
-}
-
-function szovegMezo(string $nev, $szoveg) {
-    if ($szoveg == "") {
-        $szoveg = "Kezdeti szöveg";
-    }
-    $szv = '<input type="text" name="' . $nev . '" value="' . $szoveg . '" />';
-    return $szv;
-}
-
-function adatbazisKapcsolat() {
-    $kapcsolat = mysqli_connect('127.0.0.1', 'root', 'alma', 'tanulok', '3306');
-    if (!$kapcsolat) {
-        die('Nem sikerült csatlakozni az adatbázishoz: ' . mysqli_connect_error());
-    }
-    mysqli_query($kapcsolat, 'SET NAMES \'utf8\'');
-    return $kapcsolat;
-}
-
-function adatbazisLezaras($kapcsolat) {
-    mysqli_close($kapcsolat);
-}
-
-function tanuloTabla() {
-    $kapcsolat = adatbazisKapcsolat();
-    echo '<table>';
-    echo '<tr>';
-    echo '<th>tazon</th>';
-    echo '<th>nev</th>';
-    echo '<th>szak</th>';
-    echo '</tr>';
-    $eredmeny = mysqli_query($kapcsolat, 'SELECT tazon, nev, szak FROM tanulo');
-    while (($sor = mysqli_fetch_array($eredmeny, MYSQLI_ASSOC)) != NULL) {
-        echo '<tr>';
-        echo '<td>' . $sor['tazon'] . '</td>';
-        echo '<td>' . $sor['nev'] . '</td>';
-        echo '<td>' . $sor['szak'] . '</td>';
-        echo '</tr>';
-    }
-    mysqli_free_result($eredmeny);
-    echo '</table>';
-    adatbazisLezaras($kapcsolat);
-}
-?>
